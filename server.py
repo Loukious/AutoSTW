@@ -48,7 +48,7 @@ if __name__ == "__main__":
         [
             (r"/", MainHandler)
         ])
-    app.listen(8080)
+    app.listen(int(os.getenv('PORT', 80)))
     print("Server started!")
     asyncio.get_event_loop().run_forever()
     tornado.ioloop.IOLoop.current().start()
