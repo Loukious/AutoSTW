@@ -13,10 +13,11 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 
 async def webhook(msg):
-    url = "https://discord.com/api/webhooks/852319967453118476/f2soExwP4pHaEG-jdaue21cz8Ul3LgXw4My2rDusy6cGd9W_i6v-MiGuis7kvAgDL3mN"
+
+    url = "https://discord.com/api/webhooks/852610375497285662/pCoohygNyds_po2BbACRDiEoEavz0PWbYiR7-35-1AB9T5X2FXiGDk2c3T-3QoH2Ubm7"
 
     data = {
-        "username": "Auto Claim Daily bot",
+        "username": "Auto STW rewards Claiming bot",
         "content" : msg
     }
 
@@ -24,7 +25,7 @@ async def webhook(msg):
         await r.post(url, json=data, timeout=10)
 
 
-@aiocron.crontab('7 18 * * *')
+@aiocron.crontab('14 18 * * *')
 async def attime():
     await webhook("@here claiming STW rewards started..")
     print("Started claiming rewards..")
