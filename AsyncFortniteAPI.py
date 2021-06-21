@@ -120,12 +120,13 @@ async def ClaimDaily(acc):
 
 async def ClaimAllDailies():
 	global AccDB
-	
 	async for acc in AccDB.find({"autodaily": True}):
 		print("Claiming rewards for {}".format(acc["account_id"]))
-		await ClaimDaily(acc)
-
-		
+		try:
+			await ClaimDaily(acc)
+		except:
+			print(traceback.format_exc())
+			
 	
 
 
@@ -181,7 +182,7 @@ def GetDBinfo():
 client = AsyncIOMotorClient(GetDBinfo())
 db = client.get_default_database()
 AccDB = db['accounts']
-CardDB = db['card']
+
 
 loop = asyncio.get_event_loop()
 USER_AGENT = loop.run_until_complete(GetClientVersion())
