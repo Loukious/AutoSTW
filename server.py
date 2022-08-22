@@ -27,11 +27,11 @@ async def webhook(msg):
 
 @aiocron.crontab('1 0 * * *')
 async def attime():
-    await webhook("@here claiming STW rewards started..")
+    await webhook("<@&852445293974650900> claiming STW rewards started..")
     print("Started claiming rewards..")
     await ClaimAllDailies()
     print("Done claiming rewards..")
-    await webhook("@here claiming STW rewards done.")
+    await webhook("<@&852445293974650900> claiming STW rewards done.")
 
 
 
