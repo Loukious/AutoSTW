@@ -14,7 +14,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 async def webhook(msg):
 
-    url = "https://discord.com/api/webhooks/852615812438163526/1_2Yq0QfojmfepTXL6IdIxYJ8A7FBZx-Do9goRgMKJ5JKEd7IP7rUp76GVN8rNeCr5u7"
+    url = "https://discord.com/api/webhooks/1012083072390418512/giO9hbpkeGkpGScAjgYjiVv3rWvsWZgrJ2upeIjhLeo_Tbtcm60ZVpVOBV8NMaljPkcr"
 
     data = {
         "username": "Auto STW rewards Claiming bot",
