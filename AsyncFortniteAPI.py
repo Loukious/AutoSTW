@@ -116,12 +116,19 @@ async def ClaimDaily(acc):
 		AccDB.delete_one({"user": acc['user'], "account_id":acc['account_id']})
 
 
+
+async def keepawake():
+    url = "https://autostw.onrender.com"
+    async with aiohttp.ClientSession() as r:
+        await r.get(url, timeout=10)
+
 			
 
 async def ClaimAllDailies():
 	global AccDB
 	async for acc in AccDB.find({"autodaily": True}):
 		print("Claiming rewards for {}".format(acc["account_id"]))
+		await keepawake()
 		try:
 			await ClaimDaily(acc)
 		except:
