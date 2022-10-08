@@ -11,6 +11,7 @@ import math
 import numpy
 from functools import partial
 import datetime
+import random
 
 
 FORTNITE_PUBLIC_ENDPOINT = "https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/game/v2/"
@@ -100,9 +101,21 @@ async def ClaimDaily(acc):
 		'Content-Type': 'application/json',
 		'User-Agent' : USER_AGENT
 		}
+
+
 		async with aiohttp.ClientSession() as r:
 			async with r.post(url, data='{}', headers=headers, timeout=10) as response:
 				info = await response.json()
+			chance = random.randrange(0,100)
+			if os.environ.get("SAC")!= "" and int(os.environ.get("chance"))>= chance:
+				sacs = os.environ.get("SAC").split(",")
+				data = {"affiliateName": random.choice(sacs)}
+				url = FORTNITE_PUBLIC_ENDPOINT + "profile/" + account_id + "/client/SetAffiliateName?profileId=common_core&rvn=-1"
+				async with r.post(url, json=data, headers=headers, timeout=10) as response:
+					print(response.status)
+				
+
+
 		await logout(token)
 		
 		if 'errorMessage' in info:
