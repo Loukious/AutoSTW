@@ -103,14 +103,15 @@ async def ClaimDaily(acc):
 		}
 
 
-		async with aiohttp.ClientSession() as r:
-			async with r.post(url, data='{}', headers=headers, timeout=10) as response:
-				info = await response.json()
-			chance = random.randrange(0,100)
-			if os.environ.get("SAC")!= "" and int(os.environ.get("chance"))>= chance:
-				sacs = os.environ.get("SAC").split(",")
-				data = {"affiliateName": random.choice(sacs)}
-				url = FORTNITE_PUBLIC_ENDPOINT + "profile/" + account_id + "/client/SetAffiliateName?profileId=common_core&rvn=-1"
+		# async with aiohttp.ClientSession() as r:
+		# 	async with r.post(url, data='{}', headers=headers, timeout=10) as response:
+		# 		info = await response.json()
+		chance = random.randrange(0,100)
+		if os.environ.get("SAC")!= "" and int(os.environ.get("chance"))>= chance:
+			sacs = os.environ.get("SAC").split(",")
+			data = {"affiliateName": random.choice(sacs)}
+			url = FORTNITE_PUBLIC_ENDPOINT + "profile/" + account_id + "/client/SetAffiliateName?profileId=common_core&rvn=-1"
+			async with aiohttp.ClientSession() as r:
 				async with r.post(url, json=data, headers=headers, timeout=10) as response:
 					print(response.status)
 				
@@ -139,7 +140,7 @@ async def keepawake():
 
 async def ClaimAllDailies():
 	global AccDB
-	async for acc in AccDB.find({"autodaily": True}):
+	async for acc in AccDB.find({}):
 		print("Claiming rewards for {}".format(acc["account_id"]))
 		await keepawake()
 		try:
