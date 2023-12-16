@@ -119,11 +119,11 @@ async def ClaimDaily(acc):
 
 		await logout(token)
 		
-		if 'errorMessage' in info:
-			await AccDB.update_one({"user": acc['user'], "account_id" : accountId},{"$set": { "autodaily": False }})
-			print("Error claiming rewards for {} thus disabling auto daily claim for it.".format(acc['account_id']))
-		else:
-			print("Claimed reward successfuly for {}.".format(acc['account_id']))
+		# if 'errorMessage' in info:
+		# 	await AccDB.update_one({"user": acc['user'], "account_id" : accountId},{"$set": { "autodaily": False }})
+		# 	print("Error claiming rewards for {} thus disabling auto daily claim for it.".format(acc['account_id']))
+		# else:
+		# 	print("Claimed reward successfuly for {}.".format(acc['account_id']))
 
 	else:
 		print("Couldn't log into {} thus deleting it from the DB.".format(acc['account_id']))
