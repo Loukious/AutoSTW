@@ -23,14 +23,12 @@ LAUNCHER_ENDPOINT = "https://launcher-public-service-prod06.ol.epicgames.com/lau
 EVENTS_PUBLIC_ENDPOINT = "https://events-public-service-live.ol.epicgames.com/api/v1/events/Fortnite/download/"
 PORTRAIL_ENDPOINT = "https://cdn2.unrealengine.com/Kairos/portraits/"
 
-SWITCH_AUTH = "basic NTIyOWRjZDNhYzM4NDUyMDhiNDk2NjQ5MDkyZjI1MWI6ZTNiZDJkM2UtYmY4Yy00ODU3LTllN2QtZjNkOTQ3ZDIyMGM3"
-IOS_AUTH = "basic MzQ0NmNkNzI2OTRjNGE0NDg1ZDgxYjc3YWRiYjIxNDE6OTIwOWQ0YTVlMjVhNDU3ZmI5YjA3NDg5ZDMxM2I0MWE="
+NEW_SWITCH_AUTH = "basic OThmN2U0MmMyZTNhNGY4NmE3NGViNDNmYmI0MWVkMzk6MGEyNDQ5YTItMDAxYS00NTFlLWFmZWMtM2U4MTI5MDFjNGQ3"
 USER_AGENT = ""
 SWITCH_HEADER = {
-	"Authorization": SWITCH_AUTH,
+	"Authorization": NEW_SWITCH_AUTH,
 	"User-Agent": USER_AGENT
 }
-
 
 async def GetClientToken():
 	url = ACCOUNT_PUBLIC_ENDPOINT + "oauth/token"
@@ -62,7 +60,7 @@ async def GetClientVersion():
 
 async def GetFnTokenAuth(device_id,accountId,secret):
 	headers = {
-	'Authorization': IOS_AUTH,
+	'Authorization': NEW_SWITCH_AUTH,
 	'User-Agent' : USER_AGENT
 	}
 	url = "https://account-public-service-prod.ol.epicgames.com/account/api/oauth/token"
@@ -126,8 +124,8 @@ async def ClaimDaily(acc):
 		# 	print("Claimed reward successfuly for {}.".format(acc['account_id']))
 
 	else:
-		print("Couldn't log into {} thus deleting it from the DB.".format(acc['account_id']))
-		AccDB.delete_one({"user": acc['user'], "account_id":acc['account_id']})
+		print("Couldn't log into {}.".format(acc['account_id']))
+		# AccDB.delete_one({"user": acc['user'], "account_id":acc['account_id']})
 
 
 
@@ -155,7 +153,7 @@ async def ClaimAllDailies():
 
 async def GetFnTokenAuthCode(code):
 	headers = {
-	'Authorization': IOS_AUTH,
+	'Authorization': NEW_SWITCH_AUTH,
 	'User-Agent': USER_AGENT
 	}
 	url = ACCOUNT_PUBLIC_ENDPOINT + "oauth/token"
