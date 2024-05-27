@@ -6,7 +6,7 @@ import tornado.web
 import os.path
 import aiocron
 from AsyncFortniteAPI import *
-
+from dotenv import load_dotenv
 
 
 
@@ -27,7 +27,7 @@ async def webhook(msg):
 async def attime():
     # await webhook("<@&852445293974650900> claiming STW rewards started..")
     print("Started claiming rewards..")
-    await ClaimAllDailies()
+    await fClient.ClaimAllDailies()
     print("Done claiming rewards..")
     # await webhook("<@&852445293974650900> claiming STW rewards done.")
 
@@ -42,6 +42,11 @@ class MainHandler(tornado.web.RequestHandler):
 
 
 if __name__ == "__main__":
+    load_dotenv()
+    client = AsyncIOMotorClient(GetDBinfo())
+    db = client.get_default_database()
+    AccDB = db['accounts']
+    fClient = AsyncFortniteAPI(AccDB)
 
     app = tornado.web.Application(
         [

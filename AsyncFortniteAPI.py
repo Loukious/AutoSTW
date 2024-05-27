@@ -22,154 +22,112 @@ SWITCH_HEADER = {
 	"User-Agent": USER_AGENT
 }
 
-async def GetClientToken():
-	url = ACCOUNT_PUBLIC_ENDPOINT + "oauth/token"
-	login_data = {
-	"grant_type" : "client_credentials",
-	"token_type" : "eg1"
-	}
-	async with aiohttp.ClientSession() as s:
-		async with s.post(url,data=login_data, headers=SWITCH_HEADER) as response:
-			token = (await response.json())['access_token']
-	return token
 
+class AsyncFortniteAPI:
 
-async def GetClientVersion():
-	token = await GetClientToken()
-	headers = {
-	'Authorization': 'bearer ' + token,
-	'User-Agent' : USER_AGENT
-	}
-	url = LAUNCHER_ENDPOINT + "public/assets/v2/platform/Windows/namespace/fn/catalogItem/4fe75bbc5a674f4f9b356b5c90567da5/app/Fortnite/label/Live"
-	async with aiohttp.ClientSession() as s:
-		async with s.get(url, headers=headers) as response:
-			versioninfo = (await response.json())['elements'][0]['buildVersion']
-	return "Fortnite/" + versioninfo[:-8] + " Windows/10.0.19042.1.256.64bit"
-
-
-
-
-
-async def GetFnTokenAuth(device_id,accountId,secret):
-	headers = {
-	'Authorization': NEW_SWITCH_AUTH,
-	'User-Agent' : USER_AGENT
-	}
-	url = "https://account-public-service-prod.ol.epicgames.com/account/api/oauth/token"
-	login_data = {
-	"grant_type" : "device_auth",
-	"secret" : secret,
-	"account_id" : accountId,
-	"device_id": device_id,
-	"token_type" : "eg1"
-	}
-	async with aiohttp.ClientSession() as s:
-		async with s.post(url,data=login_data, headers=headers) as response:
-			resp = await response.json()
-	return resp
+	def __init__(self, AccDB):
+		self.AccDB = AccDB
+    
+	async def GetFnTokenAuth(self, device_id,accountId,secret):
+		headers = {
+		'Authorization': NEW_SWITCH_AUTH,
+		'User-Agent' : USER_AGENT
+		}
+		url = "https://account-public-service-prod.ol.epicgames.com/account/api/oauth/token"
+		login_data = {
+		"grant_type" : "device_auth",
+		"secret" : secret,
+		"account_id" : accountId,
+		"device_id": device_id,
+		"token_type" : "eg1"
+		}
+		async with aiohttp.ClientSession() as s:
+			async with s.post(url,data=login_data, headers=headers) as response:
+				resp = await response.json()
+		return resp
 
 
 
 
-async def ClaimDaily(acc):
-	global AccDB
+	async def ClaimDaily(self, acc):
 
-	device_id = acc['device_id']
-	accountId = acc['account_id']
-	secret = acc['secret']
-	resp = await GetFnTokenAuth(device_id,accountId,secret)
-	try:
-		token = resp['access_token']
-		account_id = resp['account_id']
-		logged = True
-	except:
-		logged = False
-	if logged:
-		url = FORTNITE_PUBLIC_ENDPOINT + "profile/" + account_id + "/client/ClaimLoginReward?profileId=campaign&rvn=-1"
+		device_id = acc['device_id']
+		accountId = acc['account_id']
+		secret = acc['secret']
+		resp = await self.GetFnTokenAuth(device_id,accountId,secret)
+		try:
+			token = resp['access_token']
+			account_id = resp['account_id']
+			logged = True
+		except:
+			logged = False
+		if logged:
+			url = FORTNITE_PUBLIC_ENDPOINT + "profile/" + account_id + "/client/ClaimLoginReward?profileId=campaign&rvn=-1"
+			headers = {
+			'Authorization': 'bearer ' + token,
+			'Content-Type': 'application/json',
+			'User-Agent' : USER_AGENT
+			}
+
+
+			# async with aiohttp.ClientSession() as r:
+			# 	async with r.post(url, data='{}', headers=headers, timeout=10) as response:
+			# 		info = await response.json()
+			chance = random.randrange(0, 100)
+			if os.environ.get("SAC")!= "" and int(os.environ.get("chance"))>= chance:
+				sacs = os.environ.get("SAC").split(",")
+				data = {"affiliateName": random.choice(sacs)}
+				url = FORTNITE_PUBLIC_ENDPOINT + "profile/" + account_id + "/client/SetAffiliateName?profileId=common_core&rvn=-1"
+				async with aiohttp.ClientSession() as r:
+					async with r.post(url, json=data, headers=headers, timeout=30) as response:
+						print(response.status)
+					
+
+
+			await self.logout(token)
+			
+			# if 'errorMessage' in info:
+			# 	await AccDB.update_one({"user": acc['user'], "account_id" : accountId},{"$set": { "autodaily": False }})
+			# 	print("Error claiming rewards for {} thus disabling auto daily claim for it.".format(acc['account_id']))
+			# else:
+			# 	print("Claimed reward successfuly for {}.".format(acc['account_id']))
+
+		else:
+			print("Couldn't log into {}.".format(acc['account_id']))
+			# AccDB.delete_one({"user": acc['user'], "account_id":acc['account_id']})
+
+
+
+	async def keepawake(self):
+		url = "https://autostw.onrender.com"
+		async with aiohttp.ClientSession() as r:
+			await r.get(url, timeout=10)
+
+				
+
+	async def ClaimAllDailies(self):
+
+		async for acc in self.AccDB.find({}):
+			print("Claiming rewards for {}".format(acc["account_id"]))
+			await self.keepawake()
+			try:
+				await self.ClaimDaily(acc)
+			except:
+				print(traceback.format_exc())
+				
+		
+
+
+
+	async def logout(self, token):
+		url = ACCOUNT_PUBLIC_ENDPOINT + "oauth/sessions/kill/" + token
 		headers = {
 		'Authorization': 'bearer ' + token,
 		'Content-Type': 'application/json',
 		'User-Agent' : USER_AGENT
 		}
-
-
-		# async with aiohttp.ClientSession() as r:
-		# 	async with r.post(url, data='{}', headers=headers, timeout=10) as response:
-		# 		info = await response.json()
-		chance = random.randrange(0,100)
-		if os.environ.get("SAC")!= "" and int(os.environ.get("chance"))>= chance:
-			sacs = os.environ.get("SAC").split(",")
-			data = {"affiliateName": random.choice(sacs)}
-			url = FORTNITE_PUBLIC_ENDPOINT + "profile/" + account_id + "/client/SetAffiliateName?profileId=common_core&rvn=-1"
-			async with aiohttp.ClientSession() as r:
-				async with r.post(url, json=data, headers=headers, timeout=10) as response:
-					print(response.status)
-				
-
-
-		await logout(token)
-		
-		# if 'errorMessage' in info:
-		# 	await AccDB.update_one({"user": acc['user'], "account_id" : accountId},{"$set": { "autodaily": False }})
-		# 	print("Error claiming rewards for {} thus disabling auto daily claim for it.".format(acc['account_id']))
-		# else:
-		# 	print("Claimed reward successfuly for {}.".format(acc['account_id']))
-
-	else:
-		print("Couldn't log into {}.".format(acc['account_id']))
-		# AccDB.delete_one({"user": acc['user'], "account_id":acc['account_id']})
-
-
-
-async def keepawake():
-    url = "https://autostw.onrender.com"
-    async with aiohttp.ClientSession() as r:
-        await r.get(url, timeout=10)
-
-			
-
-async def ClaimAllDailies():
-	global AccDB
-	async for acc in AccDB.find({}):
-		print("Claiming rewards for {}".format(acc["account_id"]))
-		await keepawake()
-		try:
-			await ClaimDaily(acc)
-		except:
-			print(traceback.format_exc())
-			
-	
-
-
-
-
-async def GetFnTokenAuthCode(code):
-	headers = {
-	'Authorization': NEW_SWITCH_AUTH,
-	'User-Agent': USER_AGENT
-	}
-	url = ACCOUNT_PUBLIC_ENDPOINT + "oauth/token"
-	login_data = {
-	"grant_type" : "authorization_code",
-	"code" : code,
-	"includePerms" : False,
-	"token_type" : "eg1"
-	}
-	async with aiohttp.ClientSession() as s:
-		async with s.post(url,data=login_data, headers=headers) as response:
-			resp = await response.json()
-	return resp
-
-
-async def logout(token):
-	url = ACCOUNT_PUBLIC_ENDPOINT + "oauth/sessions/kill/" + token
-	headers = {
-	'Authorization': 'bearer ' + token,
-	'Content-Type': 'application/json',
-	'User-Agent' : USER_AGENT
-	}
-	async with aiohttp.ClientSession() as r:
-		await r.delete(url, headers=headers, timeout=10)
+		async with aiohttp.ClientSession() as r:
+			await r.delete(url, headers=headers, timeout=10)
 
 
 
@@ -177,10 +135,10 @@ async def logout(token):
 
 
 
-async def RemoveDevice(acc):
-	global AccDB
+	async def RemoveDevice(self, acc):
 
-	AccDB.delete_one({"user": acc['user'], "account_id":acc['account_id']})
+
+		self.AccDB.delete_one({"user": acc['user'], "account_id":acc['account_id']})
 
 
 
@@ -188,12 +146,3 @@ async def RemoveDevice(acc):
 
 def GetDBinfo():
 	return os.environ.get("MONGODB_URI") + "?retryWrites=false"
-
-
-client = AsyncIOMotorClient(GetDBinfo())
-db = client.get_default_database()
-AccDB = db['accounts']
-
-
-loop = asyncio.get_event_loop()
-USER_AGENT = loop.run_until_complete(GetClientVersion())
