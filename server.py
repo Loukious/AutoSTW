@@ -23,7 +23,7 @@ async def webhook(msg):
         await r.post(url, json=data, timeout=10)
 
 
-@aiocron.crontab('1 0 * * *')
+@aiocron.crontab('1 0 */7 * *')
 async def attime():
     # await webhook("<@&852445293974650900> claiming STW rewards started..")
     print("Started claiming rewards..")
