@@ -41,7 +41,7 @@ class MainHandler(tornado.web.RequestHandler):
         
 
 class ClaimDailiesHandler(tornado.web.RequestHandler):
-    async def post(self):
+    async def get(self):
         print("Started claiming rewards..")
         await fClient.ClaimAllDailies()
         print("Done claiming rewards..")
