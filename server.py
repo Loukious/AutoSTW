@@ -40,6 +40,13 @@ class MainHandler(tornado.web.RequestHandler):
         self.write("You're not supposed to be here!")
         
 
+class ClaimDailiesHandler(tornado.web.RequestHandler):
+    async def post(self):
+        print("Started claiming rewards..")
+        await fClient.ClaimAllDailies()
+        print("Done claiming rewards..")
+        self.write("Claimed all dailies successfully!")
+
 
 if __name__ == "__main__":
     load_dotenv()
@@ -50,7 +57,8 @@ if __name__ == "__main__":
 
     app = tornado.web.Application(
         [
-            (r"/", MainHandler)
+            (r"/", MainHandler),
+            (r"/claim-dailies", ClaimDailiesHandler)
         ])
 
     port = int(os.getenv('PORT', 80))
