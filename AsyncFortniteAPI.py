@@ -45,7 +45,7 @@ class AsyncFortniteAPI:
 				resp = await response.json()
 		return resp
 
-	async def ClaimDailyQuest(self, account_id, token, profileId):
+	async def ClaimDailyQuest(self, user, account_id, token, profileId):
 
 		url = f"{FORTNITE_PUBLIC_ENDPOINT}profile/{account_id}/client/ClientQuestLogin?profileId={profileId}&rvn=-1"
 		headers = {
@@ -57,7 +57,13 @@ class AsyncFortniteAPI:
 
 		async with aiohttp.ClientSession() as r:
 			async with r.post(url, data='{}', headers=headers, timeout=10) as response:
-				await response.json()
+				info = await response.json()
+
+		if 'errorMessage' in info:
+			await self.AccDB.update_one({"user": user, "account_id" : account_id},{"$set": { "autodaily": False }})
+			print("Error claiming quest for {} thus disabling auto daily claim for it.".format(account_id))
+		else:
+			print(f"Claimed {profileId} quest successfuly for {account_id}.")
 
 
 	async def ClaimDaily(self, acc):
@@ -73,8 +79,8 @@ class AsyncFortniteAPI:
 		except:
 			logged = False
 		if logged:
-			await self.ClaimDailyQuest(account_id, token, "athena")
-			await self.ClaimDailyQuest(account_id, token, "campaign")
+			await self.ClaimDailyQuest(acc['user'], account_id, token, "athena")
+			await self.ClaimDailyQuest(acc['user'], account_id, token, "campaign")
 
 			# chance = random.randrange(0, 100)
 			# if os.environ.get("SAC")!= "" and int(os.environ.get("CHANCE"))>= chance:
@@ -89,11 +95,6 @@ class AsyncFortniteAPI:
 
 			await self.logout(token)
 			
-			# if 'errorMessage' in info:
-			# 	await AccDB.update_one({"user": acc['user'], "account_id" : accountId},{"$set": { "autodaily": False }})
-			# 	print("Error claiming rewards for {} thus disabling auto daily claim for it.".format(acc['account_id']))
-			# else:
-			# 	print("Claimed reward successfuly for {}.".format(acc['account_id']))
 
 		else:
 			print("Couldn't log into {}.".format(acc['account_id']))
