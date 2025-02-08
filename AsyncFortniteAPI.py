@@ -1,12 +1,11 @@
 import aiohttp
 import asyncio
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
 import traceback
 import random
 
 
-FORTNITE_PUBLIC_ENDPOINT = "https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/game/v2/"
+FORTNITE_PUBLIC_ENDPOINT = "https://fngw-mcp-gc-livefn.ol.epicgames.com/fortnite/api/game/v2/"
 ACCOUNT_PUBLIC_ENDPOINT = "https://account-public-service-prod.ol.epicgames.com/account/api/"
 FRIENDS_ENDPOINT = "https://friends-public-service-prod.ol.epicgames.com/friends/api/v1/"
 EULA_ENDPOINT= "https://eulatracking-public-service-prod-m.ol.epicgames.com/eulatracking/api/public/agreements/fn/"
@@ -46,7 +45,19 @@ class AsyncFortniteAPI:
 				resp = await response.json()
 		return resp
 
+	async def ClaimDailyQuest(self, account_id, token, profileId):
 
+		url = f"{FORTNITE_PUBLIC_ENDPOINT}profile/{account_id}/client/ClientQuestLogin?profileId={profileId}&rvn=-1"
+		headers = {
+		'Authorization': 'bearer ' + token,
+		'Content-Type': 'application/json',
+		'User-Agent' : USER_AGENT
+		}
+
+
+		async with aiohttp.ClientSession() as r:
+			async with r.post(url, data='{}', headers=headers, timeout=10) as response:
+				await response.json()
 
 
 	async def ClaimDaily(self, acc):
@@ -62,25 +73,17 @@ class AsyncFortniteAPI:
 		except:
 			logged = False
 		if logged:
-			url = FORTNITE_PUBLIC_ENDPOINT + "profile/" + account_id + "/client/ClaimLoginReward?profileId=campaign&rvn=-1"
-			headers = {
-			'Authorization': 'bearer ' + token,
-			'Content-Type': 'application/json',
-			'User-Agent' : USER_AGENT
-			}
+			await self.ClaimDailyQuest(account_id, token, "athena")
+			await self.ClaimDailyQuest(account_id, token, "campaign")
 
-
-			# async with aiohttp.ClientSession() as r:
-			# 	async with r.post(url, data='{}', headers=headers, timeout=10) as response:
-			# 		info = await response.json()
-			chance = random.randrange(0, 100)
-			if os.environ.get("SAC")!= "" and int(os.environ.get("chance"))>= chance:
-				sacs = os.environ.get("SAC").split(",")
-				data = {"affiliateName": random.choice(sacs)}
-				url = FORTNITE_PUBLIC_ENDPOINT + "profile/" + account_id + "/client/SetAffiliateName?profileId=common_core&rvn=-1"
-				async with aiohttp.ClientSession() as r:
-					async with r.post(url, json=data, headers=headers, timeout=30) as response:
-						print(response.status)
+			# chance = random.randrange(0, 100)
+			# if os.environ.get("SAC")!= "" and int(os.environ.get("CHANCE"))>= chance:
+			# 	sacs = os.environ.get("SAC").split(",")
+			# 	data = {"affiliateName": random.choice(sacs)}
+			# 	url = FORTNITE_PUBLIC_ENDPOINT + "profile/" + account_id + "/client/SetAffiliateName?profileId=common_core&rvn=-1"
+			# 	async with aiohttp.ClientSession() as r:
+			# 		async with r.post(url, json=data, headers=headers, timeout=30) as response:
+			# 			print(response.status)
 					
 
 
@@ -98,10 +101,6 @@ class AsyncFortniteAPI:
 
 
 
-	async def keepawake(self):
-		url = "https://autostw.onrender.com"
-		async with aiohttp.ClientSession() as r:
-			await r.get(url, timeout=10)
 
 				
 
@@ -109,7 +108,6 @@ class AsyncFortniteAPI:
 
 		async for acc in self.AccDB.find({}):
 			print("Claiming rewards for {}".format(acc["account_id"]))
-			await self.keepawake()
 			try:
 				await self.ClaimDaily(acc)
 			except:
