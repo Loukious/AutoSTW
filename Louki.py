@@ -192,6 +192,7 @@ class Louki:
 
 		collectorItems = []
 		resource = ""
+		amount = 0
 		for each in info["profileChanges"][0]["profile"]["items"]:
 			if info["profileChanges"][0]["profile"]["items"][each]["templateId"].startswith("CollectedResource"):
 				collectorItems.append(each)
