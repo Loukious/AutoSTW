@@ -1,0 +1,268 @@
+{
+    "daily_destroyarcademachines": {
+        "description": "Destroy 3 Arcade Machines in successful missions (often found in City zones)",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_destroybears": {
+        "description": "Destroy 8 Teddy Bears in successful missions (often found in Suburban zones)",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_destroyfiretrucks": {
+        "description": "Destroy 3 Fire Trucks in successful missions (often found in City zones)",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_destroygnomes": {
+        "description": "Destroy 3 Garden Gnomes in successful missions (often found hidden in every zone)",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_destroypropanetanks": {
+        "description": "Destroy 10 Propane Tanks in successful missions (often found in Industrial zones)",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_destroyseesaws": {
+        "description": "Destroy 6 Park Seesaws in successful missions (often found in Suburban zones)",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_destroyserverracks": {
+        "description": "Destroy 4 Server Racks in successful missions (often found in Bunkers and Shelters)",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_destroytransformers": {
+        "description": "Destroy 2 Industrial Power Transformers in successful missions (often found in Industrial zones)",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_destroytvs": {
+        "description": "Destroy 20 TVs in successful missions (often found in Suburban zones)",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_discovery_industriallocations": {
+        "description": "Discover Industrial Construction Sites in successful missions  ",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_discovery_rurallocations": {
+        "description": "Discover Rural Locations, Bunkers, Shacks and Ruined Houses in successful missions (found in Forests and Grasslands)",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_discovery_shelters": {
+        "description": "Discover Outdoor Survivor Shelters in successful missions (found in all zones)",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_discovery_suburbanlocations": {
+        "description": "Discover Suburbia Locations, Parks and Restaurants in successful missions",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_discovery_urbanlocations": {
+        "description": "Discover City Locations, Police stations, Fire Stations, Hospitals, Parking Lots and Decks in successful missions",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_explorezones": {
+        "description": "Fully explore 3 zones in successful missions",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_high_priority": {
+        "description": "Save 50 Survivors in successful missions",
+        "reward": {
+            "gold": 250,
+            "vBucks": 130
+        }
+    },
+    "daily_huskextermination_anyhero": {
+        "description": "Eliminate 500 Husks (Any Hero) in successful missions",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_huskextermination_constructor": {
+        "description": "Eliminate 300 Husks in successful missions as a Constructor",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_huskextermination_melee": {
+        "description": "Eliminate 300 Husks with a melee weapon in successful missions",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_huskextermination_ninja": {
+        "description": "Eliminate 300 Husks in successful missions as a Ninja",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_huskextermination_outlander": {
+        "description": "Eliminate 300 Husks in successful missions as an Outlander",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_huskextermination_ranged_assault": {
+        "description": "Eliminate 300 Husks with an assault rifle in successful missions",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_huskextermination_ranged_pistol": {
+        "description": "Eliminate 300 Husks with a pistol in successful missions",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_huskextermination_ranged_shotgun": {
+        "description": "Eliminate 300 Husks with a shotgun in successful missions",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_huskextermination_ranged_smg": {
+        "description": "Eliminate 300 Husks with an SMG in successful missions",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_huskextermination_ranged_sniper": {
+        "description": "Eliminate 300 Husks with a sniper rifle in successful missions",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_huskextermination_soldier": {
+        "description": "Eliminate 300 Husks in successful missions as a Soldier",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_huskextermination_trap": {
+        "description": "Eliminate 150 Husks with traps in successful missions",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_mission_buildradar": {
+        "description": "Build 4 Radar Towers in successful missions",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_mission_specialist_anyhero_1": {
+        "description": "Complete 3 missions",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_mission_specialist_anyhero_2": {
+        "description": "Complete 5 missions",
+        "reward": {
+            "gold": 410,
+            "vBucks": 130
+        }
+    },
+    "daily_mission_specialist_constructor": {
+        "description": "Complete 3 missions as a Constructor",
+        "reward": {
+            "gold": 250,
+            "vBucks": 90
+        }
+    },
+    "daily_mission_specialist_ninja": {
+        "description": "Complete 3 missions as a Ninja",
+        "reward": {
+            "gold": 250,
+            "vBucks": 90
+        }
+    },
+    "daily_mission_specialist_outlander": {
+        "description": "Complete 3 missions as an Outlander",
+        "reward": {
+            "gold": 250,
+            "vBucks": 90
+        }
+    },
+    "daily_mission_specialist_soldier": {
+        "description": "Complete 3 missions as a Soldier",
+        "reward": {
+            "gold": 250,
+            "vBucks": 90
+        }
+    },
+    "daily_partyof50": {
+        "description": "Save 25 Survivors in successful missions",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_safes": {
+        "description": "Loot a Safe in a successful mission",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    },
+    "daily_treasurechests": {
+        "description": "Loot 5 Treasure Chests in successful missions",
+        "reward": {
+            "gold": 250,
+            "vBucks": 80
+        }
+    }
+}
