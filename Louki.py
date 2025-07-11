@@ -40,8 +40,7 @@ class Louki:
 		return self
 
 	async def __aexit__(self, *exc):
-		# await self.Logout()
-		pass
+		await self.Logout()
 
 	def __enter__(self):
 		# asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
