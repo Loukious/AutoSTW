@@ -1,12 +1,13 @@
 import json
 import os
 import random
-import aiohttp
 import asyncio
+import secrets
+from curl_cffi.requests import AsyncSession
+import string
 
 
-
-FORTNITE_PUBLIC_ENDPOINT = "https://fngw-mcp-gc-livefn.ol.epicgames.com/fortnite/api/game/v2/"
+FORTNITE_PUBLIC_ENDPOINT = "https://mcp-gc.live.fngw.ol.epicgames.com/fortnite/api/game/v2/"
 ACCOUNT_PUBLIC_ENDPOINT = "https://account-public-service-prod.ol.epicgames.com/account/api/"
 FRIENDS_ENDPOINT = "https://friends-public-service-prod.ol.epicgames.com/friends/api/v1/"
 EULA_ENDPOINT= "https://eulatracking-public-service-prod-m.ol.epicgames.com/eulatracking/api/public/agreements/fn/"
@@ -51,6 +52,19 @@ class Louki:
 		loop = asyncio.get_event_loop()
 		loop.run_until_complete(self.Logout())
 
+	def generate_id(self, prefix="FRONTEND"):
+		random_hex = secrets.token_hex(16).upper()
+		return f"{prefix}-{random_hex}"
+
+	def random_string(self, length):
+		alphabet = string.ascii_letters + string.digits
+		return ''.join(secrets.choice(alphabet) for _ in range(length))
+
+	def generate_custom_id(self):
+		part1 = self.random_string(9)
+		part2 = self.random_string(12)
+		return f"FN-{part1}-{part2}"
+
 	async def Login(self):
 		# print("Logging in")
 		if self.acc["secret"]:
@@ -58,20 +72,28 @@ class Louki:
 	
 		self.headers = {
 			"Authorization": "bearer " + self.token,
-			"User-Agent": USER_AGENT
+			"User-Agent": USER_AGENT,
+			"X-EpicGames-GameSessionId": self.generate_id(),
+			"X-EpicGames-ProfileRevisions": '[{"profileId":"common_core","clientCommandRevision":-1}]'
 		}
 
 	async def Logout(self):
-		url = "{}oauth/sessions/kill/{}".format(
-			ACCOUNT_PUBLIC_ENDPOINT, self.token)
-		async with aiohttp.ClientSession(headers=self.headers) as s:
+		url = "{}oauth/sessions/kill/{}".format(ACCOUNT_PUBLIC_ENDPOINT, self.token)
+		self.headers.update({
+			"X-Epic-Correlation-ID": self.generate_custom_id()
+		})
+		async with AsyncSession(headers=self.headers) as s:
 			await s.delete(url, timeout=10)
 
 	async def GetToken(self, login_data):
 		url = "{}oauth/token".format(ACCOUNT_PUBLIC_ENDPOINT)
-		async with aiohttp.ClientSession(headers=self.BASIC_IOS_HEADER) as s:
-			async with s.post(url, data=login_data) as response:
-				resp = await response.json()
+		self.headers.update({
+			"X-Epic-Correlation-ID": self.generate_custom_id()
+		})
+		async with AsyncSession(headers=self.BASIC_IOS_HEADER) as s:
+			response = await s.post(url, data=login_data)
+			resp = response.json()
+
 		if "access_token" in resp:
 			self.account_id = resp["account_id"]
 			return resp["access_token"]
@@ -93,11 +115,18 @@ class Louki:
 	async def QueryMCP(self, command, profile, body={}, rvn=-1):
 		url = "{}profile/{}/client/{}?profileId={}&rvn={}".format(
 			FORTNITE_PUBLIC_ENDPOINT, self.acc["account_id"], command, profile, rvn)
-		if type(body) == str:
+
+		if isinstance(body, str):
 			body = json.loads(body)
-		async with aiohttp.ClientSession(headers=self.headers) as s:
-			async with s.post(url, json=body, timeout=20) as response:
-				info = await response.json()
+
+		self.headers.update({
+			"X-Epic-Correlation-ID": self.generate_custom_id()
+		})
+		print(USER_AGENT)
+		async with AsyncSession(headers=self.headers) as s:
+			response = await s.post(url, json=body, timeout=20)
+			info = response.json()
+
 		if "errorMessage" in info:
 			info["errorMessage"] = info["errorMessage"].replace("'", "")
 			raise Exception(info)
@@ -137,21 +166,18 @@ class Louki:
 		return await self.GetSTWDailyQuests()
 
 	async def ClaimDailyQuest(self, profileId):
+		url = f"{FORTNITE_PUBLIC_ENDPOINT}profile/{self.acc['account_id']}/client/ClientQuestLogin?profileId={profileId}&rvn=-1"
+		self.headers.update({
+			"X-Epic-Correlation-ID": self.generate_custom_id()
+		})
+		async with AsyncSession(headers=self.headers) as r:
+			response = await r.post(url, json={}, timeout=10)
+			info = response.json()
 
-		url = f"{FORTNITE_PUBLIC_ENDPOINT}profile/{self.acc["account_id"]}/client/ClientQuestLogin?profileId={profileId}&rvn=-1"
-		headers = {
-		'Authorization': 'bearer ' + self.token,
-		'Content-Type': 'application/json',
-		'User-Agent' : USER_AGENT
-		}
-
-		async with aiohttp.ClientSession(headers=self.headers) as r:
-			async with r.post(url, data='{}', headers=headers, timeout=10) as response:
-				info = await response.json()
 		if profileId == "campaign" and "errorMessage" not in info:
-    		# Get current daily quests
+			# Get current daily quests
 			quests = await self.GetSTWDailyQuests()
-			
+
 			# Filter quests with 80 vBucks reward
 			vbucks_quests = []
 			for quest in quests.values():
@@ -253,3 +279,29 @@ class Louki:
 		if os.environ.get("SAC")!= "" and int(os.environ.get("CHANCE"))>= chance:
 			sacs = os.environ.get("SAC").split(",")
 			await self.SetSaC(sacs)
+
+
+async def GetClientToken():
+	url = "{}oauth/token".format(ACCOUNT_PUBLIC_ENDPOINT)
+	login_data = {
+		"grant_type": "client_credentials",
+		"token_type": "eg1"
+	}
+	async with AsyncSession() as s:
+		response = await s.post(url, data=login_data, headers=SWITCH_HEADER)
+		token = response.json()['access_token']
+	return token
+
+async def GetClientVersion():
+	global USER_AGENT
+	token = await GetClientToken()
+	headers = {
+		'Authorization': 'bearer ' + token,
+		'User-Agent': USER_AGENT
+	}
+	url = "{}public/assets/v2/platform/Windows/namespace/fn/catalogItem/4fe75bbc5a674f4f9b356b5c90567da5/app/Fortnite/label/Live".format(
+		LAUNCHER_ENDPOINT)
+	async with AsyncSession() as s:
+		response = await s.get(url, headers=headers)
+		versioninfo = response.json()['elements'][0]['buildVersion']
+	USER_AGENT = "Fortnite/" + versioninfo[:-8] + " Windows/10.0.26100.1.256.64bit"

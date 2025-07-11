@@ -1,5 +1,6 @@
 import traceback
 from Louki import *
+from Louki import GetClientVersion
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
@@ -9,7 +10,7 @@ def GetDBinfo():
 
 async def claim_all_dailies():
     load_dotenv()
-    
+    await GetClientVersion()
     # Connect to MongoDB
     client = AsyncIOMotorClient(GetDBinfo())
     db = client.get_default_database()
