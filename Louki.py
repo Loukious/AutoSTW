@@ -3,6 +3,7 @@ import os
 import random
 import asyncio
 import secrets
+import uuid
 from curl_cffi.requests import AsyncSession
 import string
 
@@ -39,7 +40,8 @@ class Louki:
 		return self
 
 	async def __aexit__(self, *exc):
-		await self.Logout()
+		# await self.Logout()
+		pass
 
 	def __enter__(self):
 		# asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -65,6 +67,10 @@ class Louki:
 		part2 = self.random_string(12)
 		return f"FN-{part1}-{part2}"
 
+	def generate_guid_with_braces(self):
+		return "{" + str(uuid.uuid4()).upper() + "}"
+
+
 	async def Login(self):
 		# print("Logging in")
 		if self.acc["secret"]:
@@ -74,7 +80,7 @@ class Louki:
 			"Authorization": "bearer " + self.token,
 			"User-Agent": USER_AGENT,
 			"X-EpicGames-GameSessionId": self.generate_id(),
-			"X-EpicGames-ProfileRevisions": '[{"profileId":"common_core","clientCommandRevision":-1}]'
+            "X-EpicGames-AnalyticsSessionId": self.generate_guid_with_braces()
 		}
 
 	async def Logout(self):
@@ -87,7 +93,7 @@ class Louki:
 
 	async def GetToken(self, login_data):
 		url = "{}oauth/token".format(ACCOUNT_PUBLIC_ENDPOINT)
-		self.headers.update({
+		self.BASIC_IOS_HEADER.update({
 			"X-Epic-Correlation-ID": self.generate_custom_id()
 		})
 		async with AsyncSession(headers=self.BASIC_IOS_HEADER) as s:
@@ -120,9 +126,10 @@ class Louki:
 			body = json.loads(body)
 
 		self.headers.update({
-			"X-Epic-Correlation-ID": self.generate_custom_id()
+			"X-Epic-Correlation-ID": self.generate_custom_id(),
+			"X-EpicGames-ProfileRevisions": '[{"profileId":"' + profile + '","clientCommandRevision":-1}]'
 		})
-		print(USER_AGENT)
+
 		async with AsyncSession(headers=self.headers) as s:
 			response = await s.post(url, json=body, timeout=20)
 			info = response.json()
@@ -210,7 +217,7 @@ class Louki:
 			await self.AccDB.update_one({"user": self.acc["user"], "account_id" : self.acc["account_id"]},{"$set": { "autodaily": False }})
 			print("Error claiming quest for {} thus disabling auto daily claim for it.".format(self.acc["account_id"]))
 		else:
-			print(f"Claimed {profileId} quest successfuly for {self.acc["account_id"]}.")
+			print(f"Claimed {profileId} quest successfuly for {self.acc['account_id']}.")
 
 
 	async def GetCollectors(self):
@@ -270,7 +277,7 @@ class Louki:
 				for modified in info["profileChanges"]:
 					if "itemId" in modified:
 						if modified["itemId"] == resource:
-							print(f"Claimed {modified["quantity"]} resources for {self.acc["account_id"]}.")
+							print(f"Claimed {modified['quantity']} resources for {self.acc['account_id']}.")
 
 			lowest_stat_key = min(Stats, key=Stats.get)
 			if Stats[lowest_stat_key] < 120:
