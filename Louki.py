@@ -58,13 +58,11 @@ class Louki:
 		return f"{prefix}-{random_hex}"
 
 	def random_string(self, length):
-		alphabet = string.ascii_letters + string.digits
+		alphabet = string.ascii_letters + string.digits + "-_"
 		return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 	def generate_custom_id(self):
-		part1 = self.random_string(9)
-		part2 = self.random_string(12)
-		return f"FN-{part1}-{part2}"
+		return f"FN-{self.random_string(22)}"
 
 	def generate_guid_with_braces(self):
 		return "{" + str(uuid.uuid4()).upper() + "}"
