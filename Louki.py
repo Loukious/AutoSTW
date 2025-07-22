@@ -126,7 +126,7 @@ class Louki:
 
 		self.headers.update({
 			"X-Epic-Correlation-ID": self.generate_custom_id(),
-			"X-EpicGames-ProfileRevisions": '[{"profileId":"' + profile + '","clientCommandRevision":-1}]'
+			"X-EpicGames-ProfileRevisions": '[{"profileId":"' + profile + '","clientCommandRevision":'+ str(rvn) + '}]'
 		})
 
 		async with AsyncSession(headers=self.headers) as s:
@@ -233,7 +233,7 @@ class Louki:
 				resource = each
 				amount = info["profileChanges"][0]["profile"]["items"][each]["quantity"]
 
-		return info["profileChangesBaseRevision"], collectorItems, resource, amount
+		return info["profileCommandRevision"], collectorItems, resource, amount
 
 	async def SpendResearch(self, StatId):
 		info = await self.QueryMCP("QueryProfile", "campaign")
@@ -241,7 +241,7 @@ class Louki:
 			if info["profileChanges"][0]["profile"]["items"][each]["templateId"].startswith("Token:collectionresource"):
 				resource = each
 				break
-		rvn = info["profileChangesBaseRevision"]
+		rvn = info["profileCommandRevision"]
 		data = {
 			"statId": StatId
 		}
