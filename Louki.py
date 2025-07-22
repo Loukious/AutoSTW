@@ -277,10 +277,17 @@ class Louki:
 					if "itemId" in modified:
 						if modified["itemId"] == resource:
 							print(f"Claimed {modified['quantity']} resources for {self.acc['account_id']}.")
+			mods = {k: v % 10 for k, v in Stats.items()}
 
-			lowest_stat_key = min(Stats, key=Stats.get)
-			if Stats[lowest_stat_key] < 120:
-				info, resource = await self.SpendResearch(lowest_stat_key)
+			if len(set(mods.values())) == 1:
+				# All stats have the same mod 10 → level the lowest stat
+				chosen_stat = min(Stats, key=Stats.get)
+			else:
+				# Choose the stat with the highest mod 10
+				chosen_stat = max(mods, key=mods.get)
+
+			if Stats[chosen_stat] < 120:
+				info, resource = await self.SpendResearch(chosen_stat)
 		chance = random.randrange(0, 100)
 		if os.environ.get("SAC")!= "" and int(os.environ.get("CHANCE"))>= chance:
 			sacs = os.environ.get("SAC").split(",")
