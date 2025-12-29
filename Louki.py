@@ -17,10 +17,10 @@ LAUNCHER_ENDPOINT = "https://launcher-public-service-prod06.ol.epicgames.com/lau
 EVENTS_PUBLIC_ENDPOINT = "https://events-public-service-live.ol.epicgames.com/api/v1/events/Fortnite/download/"
 PORTRAIL_ENDPOINT = "https://cdn2.unrealengine.com/Kairos/portraits/"
 
-NEW_SWITCH_AUTH = "basic OThmN2U0MmMyZTNhNGY4NmE3NGViNDNmYmI0MWVkMzk6MGEyNDQ5YTItMDAxYS00NTFlLWFmZWMtM2U4MTI5MDFjNGQ3"
+ANDROID_AUTH = "basic M2Y2OWU1NmM3NjQ5NDkyYzhjYzI5ZjFhZjA4YThhMTI6YjUxZWU5Y2IxMjIzNGY1MGE2OWVmYTY3ZWY1MzgxMmU="
 USER_AGENT = ""
-SWITCH_HEADER = {
-	"Authorization": NEW_SWITCH_AUTH,
+ANDROID_HEADER = {
+	"Authorization": ANDROID_AUTH,
 	"User-Agent": USER_AGENT
 }
 
@@ -29,7 +29,7 @@ class Louki:
 
 	def __init__(self, acc):
 		self.BASIC_IOS_HEADER = {
-			'Authorization': NEW_SWITCH_AUTH,
+			'Authorization': ANDROID_AUTH,
 			'User-Agent': USER_AGENT
 		}
 
@@ -299,7 +299,7 @@ async def GetClientToken():
 		"token_type": "eg1"
 	}
 	async with AsyncSession() as s:
-		response = await s.post(url, data=login_data, headers=SWITCH_HEADER)
+		response = await s.post(url, data=login_data, headers=ANDROID_HEADER)
 		token = response.json()['access_token']
 	return token
 
