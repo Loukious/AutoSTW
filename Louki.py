@@ -189,11 +189,15 @@ class Louki:
 		"""Opt-in: spend the daily reroll on the account's least wanted active quest.
 
 		'quest_ranking' is the account's category preference order (most
-		wanted category first). Within equal vBuck rewards, a quest from a
-		later (less wanted) category gets rerolled; vBuck amount always
-		wins (a 150 vB quest is never replaced), and unranked categories
-		count as least wanted. Fortnite allows 1 reroll per day, so
-		"Re-rolls exhausted" means today's reroll was already used.
+		wanted category first). Protected quests are never rerolled:
+		- quests rewarding 150+ vBucks, and
+		- quests belonging to one of the user's top 3 ranked categories
+		  (or any ranked category, if the user ranked fewer than 3).
+		Among the remaining candidates, a quest from a later (less
+		wanted) category gets rerolled; unranked categories count as
+		least wanted. If every active quest is protected, the reroll is
+		skipped. Fortnite allows 1 reroll per day, so "Re-rolls
+		exhausted" means today's reroll was already used.
 		"""
 		quests = await self.GetSTWDailyQuests()
 		if not quests:
@@ -211,17 +215,30 @@ class Louki:
 					return category
 			return None
 
+		def is_protected(key):
+			# Big reward: never give up 150 vBucks.
+			if quests[key].get("reward", {}).get("vBucks", 0) >= 150:
+				return True
+			# Favourite categories: never touch the user's top 3.
+			category = category_of(key)
+			return category is not None and category in ranking[:3]
+
+		candidates = [key for key in quests if not is_protected(key)]
+		if not candidates:
+			print(f"All active quests are protected (150 vB or top categories) for {self.acc['account_id']}; skipping rotation.")
+			return
+
 		def undesirability(key):
-			# Sort key for "least wanted": vBuck reward is the primary
-			# priority (a 150 vB quest is only rerolled if nothing
-			# cheaper is active), then less preferred category, then a
-			# stable key-name tiebreak.
+			# Sort key for "least wanted" among the non-protected
+			# candidates: vBuck reward is the primary priority (a
+			# cheaper quest goes first), then less preferred category,
+			# then a stable key-name tiebreak.
 			quest = quests[key]
 			vb = quest.get("reward", {}).get("vBucks", 0)
 			category = category_of(key)
 			return (-vb, preference(category) if category else len(ranking), key)
 
-		least_key = max(quests, key=undesirability)
+		least_key = max(candidates, key=undesirability)
 		least_quest = quests[least_key]
 		try:
 			await self.QueryMCP("FortRerollDailyQuest", "campaign", {"questId": least_quest["questId"]})
