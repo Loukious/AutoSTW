@@ -19,7 +19,7 @@ async def claim_all_dailies():
     # Loop through all accounts
     async for acc in AccDB.find({"autodaily": True}):
         try:
-            async with Louki(acc) as L:
+            async with Louki(acc, AccDB) as L:
                 await L.ClaimDaily()
         except:
             print(traceback.format_exc())

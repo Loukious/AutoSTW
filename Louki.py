@@ -24,16 +24,32 @@ ANDROID_HEADER = {
 	"User-Agent": USER_AGENT
 }
 
+# Quest categories users rank via /stwquestprefs (must match the Discord
+# bot's QuestRankingView.CATEGORIES). 'quest_ranking' on an account is a
+# list of these category names in preference order.
+CATEGORIES = [
+	("Destroy things", lambda k: k.startswith("daily_destroy")),
+	("Discover locations", lambda k: k.startswith("daily_discovery")),
+	("Eliminate Husks as class", lambda k: k.startswith("daily_huskextermination") and any(x in k for x in ("anyhero", "constructor", "ninja", "outlander", "soldier"))),
+	("Eliminate Husks with weapon/traps", lambda k: k.startswith("daily_huskextermination") and not any(x in k for x in ("anyhero", "constructor", "ninja", "outlander", "soldier"))),
+	("Complete missions", lambda k: k.startswith("daily_mission_specialist_anyhero")),
+	("Complete missions as class", lambda k: k.startswith("daily_mission_specialist") and "anyhero" not in k),
+	("Mission objectives", lambda k: k in ("daily_explorezones", "daily_mission_buildradar")),
+	("Save survivors", lambda k: k in ("daily_high_priority", "daily_partyof50")),
+	("Loot", lambda k: k in ("daily_safes", "daily_treasurechests"))
+]
+
 
 class Louki:
 
-	def __init__(self, acc):
+	def __init__(self, acc, AccDB=None):
 		self.BASIC_IOS_HEADER = {
 			'Authorization': ANDROID_AUTH,
 			'User-Agent': USER_AGENT
 		}
 
 		self.acc = acc
+		self.AccDB = AccDB
 
 	async def __aenter__(self):
 		await self.Login()
@@ -169,6 +185,53 @@ class Louki:
 
 		return await self.GetSTWDailyQuests()
 
+	async def AutoRotateQuest(self):
+		"""Opt-in: spend the daily reroll on the account's least wanted active quest.
+
+		'quest_ranking' is the account's category preference order (most
+		wanted category first). Within equal vBuck rewards, a quest from a
+		later (less wanted) category gets rerolled; vBuck amount always
+		wins (a 150 vB quest is never replaced), and unranked categories
+		count as least wanted. Fortnite allows 1 reroll per day, so
+		"Re-rolls exhausted" means today's reroll was already used.
+		"""
+		quests = await self.GetSTWDailyQuests()
+		if not quests:
+			return
+
+		ranking = self.acc.get("quest_ranking") or []
+
+		def preference(key):
+			# Lower is more wanted; unranked quests rank below everything.
+			return ranking.index(key) if key in ranking else len(ranking)
+
+		def category_of(key):
+			for category, match in CATEGORIES:
+				if match(key):
+					return category
+			return None
+
+		def undesirability(key):
+			# Sort key for "least wanted": vBuck reward is the primary
+			# priority (a 150 vB quest is only rerolled if nothing
+			# cheaper is active), then less preferred category, then a
+			# stable key-name tiebreak.
+			quest = quests[key]
+			vb = quest.get("reward", {}).get("vBucks", 0)
+			category = category_of(key)
+			return (-vb, preference(category) if category else len(ranking), key)
+
+		least_key = max(quests, key=undesirability)
+		least_quest = quests[least_key]
+		try:
+			await self.QueryMCP("FortRerollDailyQuest", "campaign", {"questId": least_quest["questId"]})
+			print(f"Auto-rotated '{least_quest['description']}' for {self.acc['account_id']}.")
+		except Exception as e:
+			if "Re-rolls exhausted" in str(e):
+				print(f"Daily reroll already used for {self.acc['account_id']}.")
+			else:
+				print(f"Failed to auto-rotate quest for {self.acc['account_id']}: {e}")
+
 	async def ClaimDailyQuest(self, profileId):
 		url = f"{FORTNITE_PUBLIC_ENDPOINT}profile/{self.acc['account_id']}/client/ClientQuestLogin?profileId={profileId}&rvn=-1"
 		self.headers.update({
@@ -179,39 +242,13 @@ class Louki:
 			info = response.json()
 
 		if profileId == "campaign" and "errorMessage" not in info:
-			# Get current daily quests
-			quests = await self.GetSTWDailyQuests()
-
-			# Filter quests with 80 vBucks reward
-			vbucks_quests = []
-			for quest in quests.values():
-				if quest.get('reward', {}).get('vBucks', 0) == 80:
-					vbucks_quests.append(quest)
-			
-			if not vbucks_quests:
-				return quests  # No 80 vBucks quests to replace
-			
-			# Split quests into Eliminate and non-Eliminate
-			eliminate_quests = []
-			other_quests = []
-			for quest in vbucks_quests:
-				if 'Eliminate' in quest['description']:
-					eliminate_quests.append(quest)
-				else:
-					other_quests.append(quest)
-			
-			# Determine which quest to replace
-			if other_quests:
-				quest_to_replace = other_quests[0]
-			else:
-				quest_to_replace = eliminate_quests[0]
-			
-			# Replace the selected quest using its questId
-			await self.ReplaceSTWDailyQuest(quest_to_replace['questId'])
-			print(f"Replaced {quest_to_replace['description']} quest for {self.acc['account_id']}.")
+			# Opt-in auto rotation replaces the least wanted quest once per day
+			if self.acc.get("autorotate"):
+				await self.AutoRotateQuest()
 
 		if 'errorMessage' in info:
-			await self.AccDB.update_one({"user": self.acc["user"], "account_id" : self.acc["account_id"]},{"$set": { "autodaily": False }})
+			if self.AccDB is not None:
+				await self.AccDB.update_one({"user": self.acc["user"], "account_id" : self.acc["account_id"]},{"$set": { "autodaily": False }})
 			print("Error claiming quest for {} thus disabling auto daily claim for it.".format(self.acc["account_id"]))
 		else:
 			print(f"Claimed {profileId} quest successfuly for {self.acc['account_id']}.")
