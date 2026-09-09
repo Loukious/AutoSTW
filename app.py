@@ -21,8 +21,15 @@ async def claim_all_dailies():
         try:
             async with Louki(acc, AccDB) as L:
                 await L.ClaimDaily()
-        except:
-            print(traceback.format_exc())
+        except Exception as e:
+            if "invalid_account_credentials" in str(e):
+                # Dead credentials — stop retrying this account every run.
+                await AccDB.update_one(
+                    {"user": acc["user"], "account_id": acc["account_id"]},
+                    {"$set": {"autodaily": False}})
+                print(f"Invalid credentials for {acc['account_id']}, auto daily disabled.")
+            else:
+                print(traceback.format_exc())
 
 # Run the async function
 if __name__ == "__main__":
