@@ -271,6 +271,90 @@ class Louki:
 			print(f"Claimed {profileId} quest successfuly for {self.acc['account_id']}.")
 
 
+	async def GetStorefront(self):
+		url = "https://fortnite-public-service-prod11.ol.epicgames.com/fortnite/api/storefront/v2/catalog"
+		self.headers.update({
+			"X-Epic-Correlation-ID": self.generate_custom_id()
+		})
+		async with AsyncSession(headers=self.headers) as s:
+			response = await s.get(url, timeout=20)
+			store = response.json()
+		return store
+
+	async def ClaimFreeLlama(self):
+		"""Claim the free llamas from the STW store (CardPackStorePreroll).
+
+		Free llamas are 0-price offers that aren't one-time 'Always.' upgrade
+		packs — they rotate in on some days and aren't always available. The
+		server rejects the purchase with 'Preroll data is missing' until the
+		store's x-ray preview exists for the account, so
+		PopulatePrerolledOffers must run first. Only 0-price offers are ever
+		purchased (expectedTotalPrice is always 0) — llamas that cost llama
+		tickets or V-Bucks are never touched. Failures are logged and never
+		propagate, so a llama problem can't break the daily claim flow.
+		"""
+		try:
+			store = await self.GetStorefront()
+			llama_store = next((f for f in store.get("storefronts", [])
+								if f.get("name") == "CardPackStorePreroll"), None)
+			if llama_store is None:
+				return
+			free = [e for e in llama_store.get("catalogEntries", [])
+					if "always" not in e.get("devName", "").lower()
+					and e.get("prices") and e["prices"][0].get("finalPrice") == 0]
+			if not free:
+				print(f"No free llamas in the store for {self.acc['account_id']}.")
+				return
+
+			# Roll the store's x-ray previews so the purchases are allowed.
+			await self.QueryMCP("PopulatePrerolledOffers", "campaign")
+
+			claimed = 0
+			for offer in free:
+				data = {
+					"offerId": offer["offerId"],
+					"purchaseQuantity": 1,
+					"currency": "GameItem",
+					"currencySubType": "AccountResource:currency_xrayllama",
+					"expectedTotalPrice": 0,
+					"gameContext": "fn"
+				}
+				# Some free offers allow several claims; keep buying until the
+				# server says the limit is reached (same loop the game runs).
+				for _ in range(10):
+					try:
+						info = await self.QueryMCP("PurchaseCatalogEntry", "common_core", data)
+					except Exception as e:
+						msg = str(e)
+						if "limit of" in msg or "because fulfillment" in msg:
+							# Already claimed today (or ever) — not an error.
+							break
+						if "catalog_out_of_date" in msg:
+							# Only ever retry at 0; a changed nonzero price
+							# means this offer is no longer free.
+							print(f"Free llama offer changed price for {self.acc['account_id']}; skipping.")
+							break
+						raise e
+					claimed += 1
+					# Choice card packs the purchase left in the campaign
+					# profile only pay out once an option is picked.
+					for update in info.get("multiUpdate", []):
+						if update.get("profileId") != "campaign":
+							continue
+						for change in update.get("profileChanges", []):
+							item = change.get("item", {})
+							if (change.get("changeType") == "itemAdded"
+									and item.get("templateId", "").startswith("CardPack:")
+									and item.get("attributes", {}).get("options")):
+								await self.QueryMCP("OpenCardPack", "campaign",
+									{"cardPackItemId": change["itemId"], "selectionIdx": 0})
+			if claimed:
+				print(f"Claimed {claimed} free llama(s) for {self.acc['account_id']}.")
+			else:
+				print(f"Free llamas already claimed for {self.acc['account_id']}.")
+		except Exception as e:
+			print(f"Failed to claim free llamas for {self.acc['account_id']}: {e}")
+
 	async def GetCollectors(self):
 		info = await self.QueryMCP("QueryProfile", "campaign")
 
@@ -340,6 +424,7 @@ class Louki:
 
 			if Stats[chosen_stat] < 120:
 				info, resource = await self.SpendResearch(chosen_stat)
+		await self.ClaimFreeLlama()
 		chance = random.randrange(0, 100)
 		if os.environ.get("SAC")!= "" and int(os.environ.get("CHANCE"))>= chance:
 			sacs = os.environ.get("SAC").split(",")
